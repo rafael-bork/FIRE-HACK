@@ -195,7 +195,6 @@ def predict_grid_sse():
             })
             
             pred_col = 'linear_pred' if model_type == 'complex' else 'linear_pred_linear'
-            error_col = 'error_estimate' if model_type == 'complex' else 'error_estimate_linear'
             input_var_cols = ['fuel_load', 'pct_3_8', 'pct_8p', 'wv100_kh', 'FWI_12h', 'DC_12h', 'Cape', 'HDW', 'wv_850', 'gT_8_7']
             
             predictions_by_duration = {}
@@ -220,7 +219,6 @@ def predict_grid_sse():
                             'lon': float(row['longitude']),
                             'ros': float(pred_value),
                             'displacement': displacement,
-                            'error_estimate': float(row.get(error_col, pred_value * 0.1)),  
                             'input_vars': {}
                         }
                         
@@ -408,7 +406,6 @@ def predict_grid():
         model_inputs = model_inputs[mask]
         
         pred_col = 'linear_pred' if model_type == 'complex' else 'linear_pred_linear'
-        error_col = 'error_estimate' if model_type == 'complex' else 'error_estimate_linear'
         input_var_cols = ['fuel_load', 'pct_3_8', 'pct_8p', 'wv100_kh', 'FWI_12h', 'DC_12h', 'Cape', 'HDW', 'wv_850', 'gT_8_7']
         
         predictions_by_duration = {}
@@ -433,7 +430,6 @@ def predict_grid():
                         'lon': float(row['longitude']),
                         'ros': float(pred_value),
                         'displacement': displacement,
-                        'error_estimate': float(row.get(error_col, pred_value * 0.1)),  
                         'input_vars': {}
                     }
                     

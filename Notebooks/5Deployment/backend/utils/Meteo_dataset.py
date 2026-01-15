@@ -76,8 +76,8 @@ def assemble_meteorological_data(required_times):
     if 'pressure_level' in ds_meteovars:
         ds_meteovars = ds_meteovars.drop_vars('pressure_level')
 
-    for f in glob.glob("Data/ERA5*.nc"):
-        os.remove(f)
+    # Note: ERA5 files are kept for caching/reuse across requests
+    # To clean up manually: rm Data/ERA5*.nc
 
     # ---------------------- Return dataset ----------------------
     print(f"Prepared meteorological dataset for {len(required_times)} hours.")

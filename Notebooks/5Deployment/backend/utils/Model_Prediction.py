@@ -27,7 +27,9 @@ def calculate_and_append_master(start_time, duration, mins_since_fire_start, mas
         'pct_8p': '8_ny_fir_p',
         'pct_3_8': '3_8y_fir_p',
         'fstart': 'f_start',
-        'FWI_12h': 'FWI_12h_av'
+        'FWI_12h': 'FWI_12h_av',
+        'HDW': 'HDW_av',
+        'sW_100': 'sW_100_av',
     }
 
     X = model_inputs.drop(columns=['latitude', 'longitude', 's_time']).rename(columns=rename_dict_xgb)
@@ -43,13 +45,6 @@ def calculate_and_append_master(start_time, duration, mins_since_fire_start, mas
     model_inputs['linear_pred'] = np.exp(predictions) - 1  # linear scale
 
     model_inputs = model_inputs.sort_values(by=["duration_hours", "latitude", "longitude"])
-
-    # ------------------- Error Estimation for XGBoost -------------------
-    with open(r'../../Models/model_xgboost_error.pkl', 'rb') as f:
-        error_model_xgb = pickle.load(f)
-
-    linear_ros = model_inputs['linear_pred'].values.reshape(-1, 1)
-    model_inputs['error_estimate'] = error_model_xgb.predict(linear_ros)
 
     # ------------------- Linear Model Predictions -------------------
     with open(r'../../Models/model_linear_ffs.pkl', 'rb') as f:
@@ -72,15 +67,14 @@ def calculate_and_append_master(start_time, duration, mins_since_fire_start, mas
     if 'Cape' in model_inputs.columns:
         model_inputs['Cape_av_log'] = signed_log1p(model_inputs['Cape'].values)
     
-    # Direct mappings (no transformation)
-    if 'HDW' in model_inputs.columns:
-        model_inputs['HDW_av'] = model_inputs['HDW'].values
-    
     if 'wv_850' in model_inputs.columns:
         model_inputs['wv_850_av'] = model_inputs['wv_850'].values
-    
+
     if 'gT_8_7' in model_inputs.columns:
         model_inputs['gT_8_7_av'] = model_inputs['gT_8_7'].values
+
+    if 'HDW' in model_inputs.columns:
+        model_inputs['HDW_av'] = model_inputs['HDW'].values
 
     # Get the exact feature order from the model
     if hasattr(linear_model, 'feature_names_in_'):
@@ -113,14 +107,6 @@ def calculate_and_append_master(start_time, duration, mins_since_fire_start, mas
         linear_predictions = linear_model.predict(X_linear)
         model_inputs['log_pred_linear'] = linear_predictions
         model_inputs['linear_pred_linear'] = np.exp(linear_predictions) - 1
-
-    # ------------------- Error Estimation for Linear model -------------------
-    with open(r'../../Models/model_linear_error.pkl', 'rb') as f:
-        error_model_linear = pickle.load(f)
-
-    # Use linear model's predictions, not XGBoost's
-    linear_ros_linear = model_inputs['linear_pred_linear'].values.reshape(-1, 1)
-    model_inputs['error_estimate_linear'] = error_model_linear.predict(linear_ros_linear)
 
     # ------------------- Transformar em xarray -------------------
     df = model_inputs.copy()
